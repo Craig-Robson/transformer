@@ -37,7 +37,10 @@ if process not in options['process']:
 
 # file paths
 data_path = '/data'
-input_dir = 'inputs'
+input_dir = getenv('input_dir')
+if input_dir is None: # for testing will use a different input dir, this allows for this by setting the default when not testing
+    input_dir = 'inputs'
+
 output_dir = 'outputs'
 
 check_output_dir(join(data_path, output_dir))
@@ -70,19 +73,19 @@ elif process == 'clip':
     Clip a spatial dataset using another spatial boundary file
     """
     # file to clip
-    input_file = getenv('file_to_clip')
+    input_file = getenv('input_file')
     if input_file is None:
         print('Error! No input_file var passed. Terminating!')
         exit(2)
 
     # clip area file
-    clip_file = getenv('file_clip_area')
+    clip_file = getenv('clip_file')
     if clip_file is None:
         print('Error! No clip_file var passed. Terminating!')
         exit(2)
 
     # output file
-    output_file = getenv('file_output')
+    output_file = getenv('output_file')
     if output_file is None:
         print('Error! No output file var passed. Terminating!')
         exit(2)

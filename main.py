@@ -28,6 +28,7 @@ options = {
 # fetch environmental variables if passed
 process = getenv('process') # one of: 'clip', 're-project'
 if process is None: # grab the default if the var hasn't been passed
+    print('Warning! No process var passed, using default - re-project')
     process = defaults['process']
 
 if process not in options['process']:
@@ -53,6 +54,7 @@ if process == 're-project':
     # output crs
     crs_output = getenv('output_crs')
     if crs_output is None: # use default is nothing is passed
+        print('Warning! No crs_output var passed. Using default - 27700')
         crs_output = defaults['output_crs']
 
     # check if crs of file is already the output crs or not
@@ -69,12 +71,21 @@ elif process == 'clip':
     """
     # file to clip
     input_file = getenv('file_to_clip')
+    if input_file is None:
+        print('Error! No input_file var passed. Terminating!')
+        exit(2)
 
     # clip area file
     clip_file = getenv('file_clip_area')
+    if clip_file is None:
+        print('Error! No clip_file var passed. Terminating!')
+        exit(2)
 
     # output file
     output_file = getenv('file_output')
+    if output_file is None:
+        print('Error! No output file var passed. Terminating!')
+        exit(2)
 
     # run clip process
     subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])

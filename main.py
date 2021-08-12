@@ -1,11 +1,22 @@
 import subprocess
-from os import listdir, getenv
-from os.path import isfile, join
+from os import listdir, getenv, mkdir
+from os.path import isfile, join, isdir
+
+
+def check_output_dir(path):
+    """
+    Check output directory exists and create if not
+    """
+    if isdir(path) is False:
+        mkdir(path)
+
+    return
+
 
 # a list of default options
 defaults = {
     'process': 're-project',
-    'crs_output': '27700'
+    'output_crs': '27700'
 }
 
 # options to accept where can be limited
@@ -28,6 +39,8 @@ data_path = '/data'
 input_dir = 'inputs'
 output_dir = 'outputs'
 
+check_output_dir(join(data_path, output_dir))
+
 # get input file(s)
 files = [f for f in listdir(join(data_path, input_dir)) if isfile(join(data_path, input_dir, f))]
 print(files)
@@ -38,9 +51,12 @@ if process == 're-project':
     Re-project a spatial file into a new projection
     """
     # output crs
-    crs_output = '27700'
+    crs_output = getenv('output_crs')
+    if crs_output is None: # use default is nothing is passed
+        crs_output = defaults['output_crs']
 
     # check if crs of file is already the output crs or not
+    # to add
 
     # run re-project for any files in the input directory
     for file in files:

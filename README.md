@@ -36,3 +36,7 @@ The following variables should be added to the above (before the `-t` flag)
 * output_file: the name to be given to the output file
   * `--env output_file=<name of file>`
 
+
+## Testing
+Some sample data files are provided in the `data/test_data` directory. To run a test using this data, use the input_dir variable  
+`--env input_dir=test_data`

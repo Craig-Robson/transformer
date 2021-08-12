@@ -1,0 +1,16 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Test re-project
+        run: docker build . -t transformer && docker run --env process=re-project --env output_crs=4326 --env input_dir=test_data -t transformer
+
+      - name: Test clip
+        run: docker build . -t transformer && docker run --env process=clip --env input_dir=test_data --env input_dir=test_data --env input_file=sssi.gpkg --env clip_file=ni_boundary_bfc_2020.gpkg --env output_file=sssi_ni.gpkg -t transformer

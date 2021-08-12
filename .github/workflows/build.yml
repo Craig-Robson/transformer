@@ -11,6 +11,3 @@ jobs:
 
       - name: Build
         run: docker build . -t transformer
-
-      - name: Test re-project
-        run: docker build . -t transformer && docker run --env process=re-project --env output_crs=4326 --env input_dir=test_data -t transformer

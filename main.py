@@ -68,6 +68,12 @@ if process == 're-project':
         subprocess.run(["ogr2ogr", "-t_srs", "EPSG:%s" %crs_output, "-f", "GPKG", join(data_path, output_dir, file), join(data_path, input_dir, file)])
     print('Completed running re-project')
 
+elif process == 'merge':
+    """
+    Merge some vector layers together - these should be of the same type.
+    """
+    print('Error! This option still needs to be developed')
+
 elif process == 'clip':
     """
     Clip a spatial dataset using another spatial boundary file

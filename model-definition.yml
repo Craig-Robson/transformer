@@ -1,0 +1,66 @@
+kind: Model
+apiVersion: v1alpha5
+metadata:
+  displayName: CityCAT (OpenCLIM)
+  type: Modelling
+  name: citycat-openclim
+  summary: CityCAT is a tool for modelling, analysis and visualisation of surface water flooding.
+  description: >
+    CityCAT (City Catchment Analysis Tool) is a unique software tool for modelling, analysis and visualisation of
+    surface water flooding. CityCAT enables rapid assessment of combined pluvial and fluvial flood risk and allows
+    assessment of the effects of different flood alleviation measures.
+    When used in return period mode, rainfall events are generated from observations using L-moments.
+spec:
+  inputs:
+    env:
+      - name: process
+        title: Process(transform) function
+        type: string
+        description: The type of process to perform e.g clip, re-project
+        default: re-project
+        required: true
+        options:
+          - name: clip
+            title: Clip a spatial dataset
+          - name: re-project
+            title: Re-project into another coordinate system
+
+      - name: output_crs
+        title: The CRS for the re-projected dataset
+        description: Required whe using the re-project transform function. Should be a valid EPSG code e.g. 27700 (BNG), 4326 (GPS CRS)
+        type: string
+        default: '27700'
+        required: false
+
+      - name: input_file
+        title: Input clip file
+        description: The name of the file passed to be clipped. Required only when running the clip transform.
+        type: string
+        default: ''
+        required: false
+
+      - name: clip_file
+        title: Input boundary clip file
+        description: The name of the file passed to be used to clip the input_file. Required only when running the clip transform.
+        type: string
+        default: ''
+        required: false
+
+      - name: output_file
+        title: Output file name
+        description: The name to be given to the output file. Required only when running the clip transform.
+        type: string
+        required: false
+        default: ''
+
+    dataslots:
+      - name: Input data files
+        description: Any input data files for the processing transforms to be run.
+        path: inputs/
+        required: true
+
+  outputs:
+    datasets:
+      - name: outputs/run/**/*
+        type: folder
+        description: path to processed data outputs

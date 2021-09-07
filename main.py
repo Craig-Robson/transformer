@@ -100,7 +100,7 @@ elif process == 'clip':
     clip_file = getenv('clip_file')
     
     # defined extents
-    extent = os.getenv('EXTENT')
+    extent = getenv('extent')
     if extent is not None:
         extent = ['-te', *extent.split(',')]
     

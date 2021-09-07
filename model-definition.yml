@@ -65,7 +65,7 @@ spec:
         required: false
         default: ''
 
-      - name: EXTENT
+      - name: extent
         title: extent
         type: string
         description: Should be formatted as `<xmin>,<ymin>,<xmax>,<ymax>`

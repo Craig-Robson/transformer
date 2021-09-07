@@ -15,6 +15,7 @@ def check_output_dir(path):
 
 # a list of default options
 defaults = {
+    'data_type': 'vector',
     'process': 're-project',
     'output_crs': '27700'
 }
@@ -34,6 +35,12 @@ if process is None: # grab the default if the var hasn't been passed
 if process not in options['process']:
     # if the set process is not accepted, return error and exit
     exit(2)
+    
+data_type = getenv('data_type') # one of: 'clip', 're-project'
+if process is None: # grab the default if the var hasn't been passed
+    print('Warning! No data_type var passed, using default - vector')
+    data_type = defaults['data_type']
+    
 
 # file paths
 data_path = '/data'
@@ -65,7 +72,11 @@ if process == 're-project':
 
     # run re-project for any files in the input directory
     for file in files:
-        subprocess.run(["ogr2ogr", "-t_srs", "EPSG:%s" %crs_output, "-f", "GPKG", join(data_path, output_dir, file), join(data_path, input_dir, file)])
+        if data_type == 'vector':
+            subprocess.run(["ogr2ogr", "-t_srs", "EPSG:%s" %crs_output, "-f", "GPKG", join(data_path, output_dir, file), join(data_path, input_dir, file)])
+        elif data_type == 'raster':
+            subprocess.run(["gdalwarp", "-t_srs", "EPSG:%s" %crs_output, join(data_path, input_dir, file), join(data_path, output_dir, file)])
+    
     print('Completed running re-project')
 
 elif process == 'merge':
@@ -84,10 +95,17 @@ elif process == 'clip':
         print('Error! No input_file var passed. Terminating!')
         exit(2)
 
+    # get extents for clip - file or defined extents
     # clip area file
     clip_file = getenv('clip_file')
-    if clip_file is None:
-        print('Error! No clip_file var passed. Terminating!')
+    
+    # defined extents
+    extent = os.getenv('EXTENT')
+    if extent is not None:
+        extent = ['-te', *extent.split(',')]
+    
+    if clip_file is None and extent is None:
+        print('Error! No clip_file var or extent var passed. Terminating!')
         exit(2)
 
     # output file
@@ -97,6 +115,16 @@ elif process == 'clip':
         exit(2)
 
     # run clip process
-    subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])
+    if data_type == 'vector':
+        if clip_file is not None:
+            subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])
+        elif extent is not None:
+            pass
+        
+    elif data_type == 'raster':
+        if extent is not None:
+            subprocess.run(["gdalwarp", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file)])
+        elif clip_file is not None:
+            pass
 
     print('Completed running clip')

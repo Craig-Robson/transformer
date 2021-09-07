@@ -25,6 +25,18 @@ spec:
           - name: re-project
             title: Re-project into another coordinate system
 
+      - name: data_type
+        title: Data type
+        type: string
+        description: The data format to be transformed
+        default: vector
+        required: false
+        options:
+          - name: vector
+            title: Vector format data
+          - name: raster
+            title: Raster format datas
+
       - name: output_crs
         title: The CRS for the re-projected dataset
         description: Required whe using the re-project transform function. Should be a valid EPSG code e.g. 27700 (BNG), 4326 (GPS CRS)
@@ -52,6 +64,13 @@ spec:
         type: string
         required: false
         default: ''
+
+      - name: EXTENT
+        title: extent
+        type: string
+        description: Should be formatted as `<xmin>,<ymin>,<xmax>,<ymax>`
+        default: ''
+        required: false
 
     dataslots:
       - name: Input data files

@@ -16,4 +16,4 @@ jobs:
         run: docker build . -t transformer && docker run --env process=clip --env input_dir=test_data --env input_file=sssi.gpkg --env clip_file=ni_boundary_bfc_2020.gpkg --env output_file=sssi_ni.gpkg -t transformer
 
       - name: Test raster clip
-        run: docker build . -t transformer && docker run --env process=clip --env data_type=raster --env input_dir=test_data --env input_file=out_cell_dev.asc --env extents=240318,657849,248669,669012 --env output_file=out_cell_dev_sm.asc -t transformer
+        run: docker build . -t transformer && docker run --env process=clip --env data_type=raster --env input_dir=test_data --env input_file=out_cell_dev.asc --env extent=240318,657849,248669,669012 --env output_file=out_cell_dev_sm.asc -t transformer

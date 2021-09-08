@@ -37,7 +37,7 @@ if process not in options['process']:
     exit(2)
     
 data_type = getenv('data_type') # one of: 'clip', 're-project'
-if process is None: # grab the default if the var hasn't been passed
+if data_type is None: # grab the default if the var hasn't been passed
     print('Warning! No data_type var passed, using default - vector')
     data_type = defaults['data_type']
     
@@ -50,6 +50,7 @@ if input_dir is None: # for testing will use a different input dir, this allows 
 
 output_dir = 'outputs'
 
+# check output dir exists and create if not
 check_output_dir(join(data_path, output_dir))
 
 # get input file(s)
@@ -102,7 +103,8 @@ elif process == 'clip':
     # defined extents
     extent = getenv('extent')
     if extent is not None:
-        extent = ['-te', *extent.split(',')]
+        #
+        extent = extent.split(',')
     
     if clip_file is None and extent is None:
         print('Error! No clip_file var or extent var passed. Terminating!')
@@ -116,14 +118,18 @@ elif process == 'clip':
 
     # run clip process
     if data_type == 'vector':
+        print('Running vector clip')
+        print(join(data_path, output_dir, output_file))
         if clip_file is not None:
-            subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])
+            subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), "-f", "GPKG", output_file, join(data_path, input_dir, input_file)])
         elif extent is not None:
-            pass
-        
+            print('Running extent method')
+            #print("ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, output_file), join(data_path, input_dir, input_file))
+            subprocess.run(["ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])
+
     elif data_type == 'raster':
         if extent is not None:
-            subprocess.run(["gdalwarp", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file)])
+            subprocess.run(["gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file)])
 
             # check output file is written...... and if not return an error
 

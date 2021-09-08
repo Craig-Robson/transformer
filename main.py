@@ -124,6 +124,9 @@ elif process == 'clip':
     elif data_type == 'raster':
         if extent is not None:
             subprocess.run(["gdalwarp", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file)])
+
+            # check output file is written...... and if not return an error
+
         elif clip_file is not None:
             pass
 

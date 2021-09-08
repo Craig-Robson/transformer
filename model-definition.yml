@@ -1,15 +1,12 @@
 kind: Model
 apiVersion: v1alpha5
 metadata:
-  displayName: CityCAT (OpenCLIM)
-  type: Modelling
-  name: citycat-openclim
-  summary: CityCAT is a tool for modelling, analysis and visualisation of surface water flooding.
+  displayName: Spatial data transformer
+  type: data-processing
+  name: spatial-data-transformer
+  summary: A utility tool for transforming spatial data
   description: >
-    CityCAT (City Catchment Analysis Tool) is a unique software tool for modelling, analysis and visualisation of
-    surface water flooding. CityCAT enables rapid assessment of combined pluvial and fluvial flood risk and allows
-    assessment of the effects of different flood alleviation measures.
-    When used in return period mode, rainfall events are generated from observations using L-moments.
+    Enables spatial data transformations using gdal methods. Supports a range of methods for both vector and raster data types.
 spec:
   inputs:
     env:
@@ -76,7 +73,7 @@ spec:
       - name: Input data files
         description: Any input data files for the processing transforms to be run.
         path: inputs/
-        required: true
+        required: false
 
   outputs:
     datasets:

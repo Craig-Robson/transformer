@@ -30,9 +30,9 @@ spec:
         required: false
         options:
           - name: vector
-            title: Vector format data
+            title: Vector data format
           - name: raster
-            title: Raster format datas
+            title: Raster data format
 
       - name: output_crs
         title: The CRS for the re-projected dataset

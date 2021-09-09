@@ -42,8 +42,8 @@ spec:
         required: false
 
       - name: input_file
-        title: Input clip file
-        description: The name of the file passed to be clipped. Required only when running the clip transform.
+        title: Input file
+        description: The name of the file passed to be transformed. Required only when running the clip process.
         type: string
         default: ''
         required: false

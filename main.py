@@ -1,6 +1,8 @@
 import subprocess
-from os import listdir, getenv, mkdir
+from os import listdir, getenv, mkdir, remove
 from os.path import isfile, join, isdir
+from pathlib import Path
+import logging
 
 
 def check_output_dir(path):
@@ -9,7 +11,10 @@ def check_output_dir(path):
     """
     if isdir(path) is False:
         mkdir(path)
-
+    else:
+        files = [f for f in listdir(path) if isfile(join(path, f))]
+        for file in files:
+            remove(join(path,file))
     return
 
 
@@ -25,23 +30,6 @@ options = {
     'process': ['clip', 're-project']
 }
 
-
-# fetch environmental variables if passed
-process = getenv('process') # one of: 'clip', 're-project'
-if process is None: # grab the default if the var hasn't been passed
-    print('Warning! No process var passed, using default - re-project')
-    process = defaults['process']
-
-if process not in options['process']:
-    # if the set process is not accepted, return error and exit
-    exit(2)
-    
-data_type = getenv('data_type') # one of: 'clip', 're-project'
-if data_type is None: # grab the default if the var hasn't been passed
-    print('Warning! No data_type var passed, using default - vector')
-    data_type = defaults['data_type']
-    
-
 # file paths
 data_path = '/data'
 input_dir = getenv('input_dir')
@@ -53,15 +41,45 @@ output_dir = 'outputs'
 # check output dir exists and create if not
 check_output_dir(join(data_path, output_dir))
 
+logger = logging.getLogger('transformer')
+logger.setLevel(logging.INFO)
+fh = logging.FileHandler( Path(join(data_path, output_dir)) / 'transformer.log')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+logger.info('Log file established!')
+
+# fetch environmental variables if passed
+process = getenv('process') # one of: 'clip', 're-project'
+if process is None: # grab the default if the var hasn't been passed
+    print('Warning! No process var passed, using default - re-project')
+    process = defaults['process']
+
+if process not in options['process']:
+    # if the set process is not accepted, return error and exit
+    exit(2)
+
+logger.info('Process: %s' %process)
+
+data_type = getenv('data_type') # one of: 'clip', 're-project'
+if data_type is None: # grab the default if the var hasn't been passed
+    print('Warning! No data_type var passed, using default - vector')
+    data_type = defaults['data_type']
+logger.info('Data type: %s' %data_type)
+
+
 # get input file(s)
 files = [f for f in listdir(join(data_path, input_dir)) if isfile(join(data_path, input_dir, f))]
 print(files)
+logger.info('Input files: %s' %files)
 
 # run re-project
 if process == 're-project':
     """
     Re-project a spatial file into a new projection
     """
+    logger.info('Running a re-project')
     # output crs
     crs_output = getenv('output_crs')
     if crs_output is None: # use default is nothing is passed
@@ -91,10 +109,13 @@ elif process == 'clip':
     Clip a spatial dataset using another spatial boundary file
     """
     # file to clip
+    logger.info('Running a clip')
+
     input_file = getenv('input_file')
     if input_file is None:
         print('Error! No input_file var passed. Terminating!')
         exit(2)
+    logger.info('Input file: %s' %input_file)
 
     # get extents for clip - file or defined extents
     # clip area file
@@ -103,15 +124,16 @@ elif process == 'clip':
     # defined extents
     extent = getenv('extent')
     if extent is not None:
-        #
         extent = extent.split(',')
-    
+    logger.info('Extent: %s' %extent)
+
     if clip_file is None and extent is None:
         print('Error! No clip_file var or extent var passed. Terminating!')
         exit(2)
 
     # output file
     output_file = getenv('output_file')
+    logger.info('Output file: %s' %output_file)
     if output_file is None:
         print('Error! No output file var passed. Terminating!')
         exit(2)
@@ -119,19 +141,28 @@ elif process == 'clip':
     # run clip process
     if data_type == 'vector':
         print('Running vector clip')
+        logger.info('Running vector clip')
         print(join(data_path, output_dir, output_file))
         if clip_file is not None:
             subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), "-f", "GPKG", output_file, join(data_path, input_dir, input_file)])
         elif extent is not None:
             print('Running extent method')
-            #print("ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, output_file), join(data_path, input_dir, input_file))
+            logger.info('Clip - using extent method')
+            logger.info("ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, output_file), join(data_path, input_dir, input_file))
+
             subprocess.run(["ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])
 
     elif data_type == 'raster':
+        logger.info('Running raster clip')
         if extent is not None:
+            logger.info("Running extent method")
+            logger.info("gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file))
             subprocess.run(["gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file)])
 
             # check output file is written...... and if not return an error
+            files = [f for f in listdir(join(data_path, output_dir)) if isfile(join(data_path, output_dir, f))]
+            print(files)
+            logger.info('Files in output dir: %s' %files)
 
         elif clip_file is not None:
             pass

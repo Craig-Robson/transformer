@@ -40,10 +40,14 @@ output_dir = 'outputs'
 
 # check output dir exists and create if not
 check_output_dir(join(data_path, output_dir))
+# chek dir for log file exists
+check_output_dir(join(data_path, output_dir, 'log'))
+# check output data dir exists
+check_output_dir(join(data_path, output_dir, 'data'))
 
 logger = logging.getLogger('transformer')
 logger.setLevel(logging.INFO)
-fh = logging.FileHandler( Path(join(data_path, output_dir)) / 'transformer.log')
+fh = logging.FileHandler( Path(join(data_path, output_dir, 'log')) / 'transformer.log')
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
@@ -144,23 +148,22 @@ elif process == 'clip':
         logger.info('Running vector clip')
         print(join(data_path, output_dir, output_file))
         if clip_file is not None:
-            subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), "-f", "GPKG", output_file, join(data_path, input_dir, input_file)])
+            subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), "-f", "GPKG", join(data_path, output_dir, 'data', output_file), join(data_path, input_dir, input_file)])
         elif extent is not None:
             print('Running extent method')
             logger.info('Clip - using extent method')
-            logger.info("ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, output_file), join(data_path, input_dir, input_file))
-
-            subprocess.run(["ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])
+            
+            subprocess.run(["ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, 'data', output_file), join(data_path, input_dir, input_file)])
 
     elif data_type == 'raster':
         logger.info('Running raster clip')
         if extent is not None:
             logger.info("Running extent method")
-            logger.info("gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file))
-            subprocess.run(["gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, output_file)])
+
+            subprocess.run(["gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, 'data', output_file)])
 
             # check output file is written...... and if not return an error
-            files = [f for f in listdir(join(data_path, output_dir)) if isfile(join(data_path, output_dir, f))]
+            files = [f for f in listdir(join(data_path, output_dir, 'data')) if isfile(join(data_path, output_dir, 'data', f))]
             print(files)
             logger.info('Files in output dir: %s' %files)
 

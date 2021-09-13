@@ -86,6 +86,7 @@ if process == 're-project':
     logger.info('Running a re-project')
     # output crs
     crs_output = getenv('output_crs')
+    logger.info("Output CRS:". crs_output)
     if crs_output is None: # use default is nothing is passed
         print('Warning! No crs_output var passed. Using default - 27700')
         crs_output = defaults['output_crs']
@@ -96,16 +97,27 @@ if process == 're-project':
     # run re-project for any files in the input directory
     for file in files:
         if data_type == 'vector':
+            logger.info('Using vector method')
+
+            logger.info("Running....")
             subprocess.run(["ogr2ogr", "-t_srs", "EPSG:%s" %crs_output, "-f", "GPKG", join(data_path, output_dir, file), join(data_path, input_dir, file)])
+            logger.info("....completed processing")
+
         elif data_type == 'raster':
+            logger.info("Using raster method")
+
+            logger.info("Running....")
             subprocess.run(["gdalwarp", "-t_srs", "EPSG:%s" %crs_output, join(data_path, input_dir, file), join(data_path, output_dir, file)])
+            logger.info("....completed processing")
     
     print('Completed running re-project')
+    logger.info("Completed running the re-project")
 
 elif process == 'merge':
     """
     Merge some vector layers together - these should be of the same type.
     """
+    logger.info('Merge method not implemented yet!')
     print('Error! This option still needs to be developed')
 
 elif process == 'clip':
@@ -124,7 +136,8 @@ elif process == 'clip':
     # get extents for clip - file or defined extents
     # clip area file
     clip_file = getenv('clip_file')
-    
+    logger.info('Clip file: %s' %clip_file)
+
     # defined extents
     extent = getenv('extent')
     if extent is not None:
@@ -145,29 +158,38 @@ elif process == 'clip':
     # run clip process
     if data_type == 'vector':
         print('Running vector clip')
-        logger.info('Running vector clip')
+        logger.info('Using vector methods')
         print(join(data_path, output_dir, output_file))
         if clip_file is not None:
+            logger.info('Using clip file method')
+            logger.info("Running....")
             subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), "-f", "GPKG", join(data_path, output_dir, 'data', output_file), join(data_path, input_dir, input_file)])
+            logger.info("....completed processing")
+
         elif extent is not None:
             print('Running extent method')
-            logger.info('Clip - using extent method')
-            
+            logger.info('Using extent method')
+            logger.info("Running....")
             subprocess.run(["ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, 'data', output_file), join(data_path, input_dir, input_file)])
+            logger.info("....completed processing")
 
     elif data_type == 'raster':
-        logger.info('Running raster clip')
+        logger.info('Using raster methods')
         if extent is not None:
-            logger.info("Running extent method")
+            logger.info("Using extent method")
 
+            logger.info("Running....")
             subprocess.run(["gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, 'data', output_file)])
-
-            # check output file is written...... and if not return an error
-            files = [f for f in listdir(join(data_path, output_dir, 'data')) if isfile(join(data_path, output_dir, 'data', f))]
-            print(files)
-            logger.info('Files in output dir: %s' %files)
+            logger.info("....completed processing")
 
         elif clip_file is not None:
-            pass
+            logger.info("Using clip file method")
+            logger.info("Raster clip method with a clip file not developed yet")
+
+    # check output file is written...... and if not return an error
+    files = [f for f in listdir(join(data_path, output_dir, 'data')) if
+             isfile(join(data_path, output_dir, 'data', f))]
+    logger.info('Files in output dir: %s' % files)
 
     print('Completed running clip')
+    logger.info('Completed running clip. Stopping tool.')

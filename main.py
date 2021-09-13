@@ -1,6 +1,8 @@
 import subprocess
-from os import listdir, getenv, mkdir
+from os import listdir, getenv, mkdir, remove
 from os.path import isfile, join, isdir
+from pathlib import Path
+import logging
 
 
 def check_output_dir(path):
@@ -9,12 +11,16 @@ def check_output_dir(path):
     """
     if isdir(path) is False:
         mkdir(path)
-
+    else:
+        files = [f for f in listdir(path) if isfile(join(path, f))]
+        for file in files:
+            remove(join(path,file))
     return
 
 
 # a list of default options
 defaults = {
+    'data_type': 'vector',
     'process': 're-project',
     'output_crs': '27700'
 }
@@ -24,6 +30,29 @@ options = {
     'process': ['clip', 're-project']
 }
 
+# file paths
+data_path = '/data'
+input_dir = getenv('input_dir')
+if input_dir is None: # for testing will use a different input dir, this allows for this by setting the default when not testing
+    input_dir = 'inputs'
+
+output_dir = 'outputs'
+
+# check output dir exists and create if not
+check_output_dir(join(data_path, output_dir))
+# chek dir for log file exists
+check_output_dir(join(data_path, output_dir, 'log'))
+# check output data dir exists
+check_output_dir(join(data_path, output_dir, 'data'))
+
+logger = logging.getLogger('transformer')
+logger.setLevel(logging.INFO)
+fh = logging.FileHandler( Path(join(data_path, output_dir, 'log')) / 'transformer.log')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+logger.info('Log file established!')
 
 # fetch environmental variables if passed
 process = getenv('process') # one of: 'clip', 're-project'
@@ -35,27 +64,29 @@ if process not in options['process']:
     # if the set process is not accepted, return error and exit
     exit(2)
 
-# file paths
-data_path = '/data'
-input_dir = getenv('input_dir')
-if input_dir is None: # for testing will use a different input dir, this allows for this by setting the default when not testing
-    input_dir = 'inputs'
+logger.info('Process: %s' %process)
 
-output_dir = 'outputs'
+data_type = getenv('data_type') # one of: 'clip', 're-project'
+if data_type is None: # grab the default if the var hasn't been passed
+    print('Warning! No data_type var passed, using default - vector')
+    data_type = defaults['data_type']
+logger.info('Data type: %s' %data_type)
 
-check_output_dir(join(data_path, output_dir))
 
 # get input file(s)
 files = [f for f in listdir(join(data_path, input_dir)) if isfile(join(data_path, input_dir, f))]
 print(files)
+logger.info('Input files: %s' %files)
 
 # run re-project
 if process == 're-project':
     """
     Re-project a spatial file into a new projection
     """
+    logger.info('Running a re-project')
     # output crs
     crs_output = getenv('output_crs')
+    logger.info("Output CRS: %s" %crs_output)
     if crs_output is None: # use default is nothing is passed
         print('Warning! No crs_output var passed. Using default - 27700')
         crs_output = defaults['output_crs']
@@ -65,13 +96,28 @@ if process == 're-project':
 
     # run re-project for any files in the input directory
     for file in files:
-        subprocess.run(["ogr2ogr", "-t_srs", "EPSG:%s" %crs_output, "-f", "GPKG", join(data_path, output_dir, file), join(data_path, input_dir, file)])
+        if data_type == 'vector':
+            logger.info('Using vector method')
+
+            logger.info("Running....")
+            subprocess.run(["ogr2ogr", "-t_srs", "EPSG:%s" %crs_output, "-f", "GPKG", join(data_path, output_dir, file), join(data_path, input_dir, file)])
+            logger.info("....completed processing")
+
+        elif data_type == 'raster':
+            logger.info("Using raster method")
+
+            logger.info("Running....")
+            subprocess.run(["gdalwarp", "-t_srs", "EPSG:%s" %crs_output, join(data_path, input_dir, file), join(data_path, output_dir, file)])
+            logger.info("....completed processing")
+    
     print('Completed running re-project')
+    logger.info("Completed running the re-project")
 
 elif process == 'merge':
     """
     Merge some vector layers together - these should be of the same type.
     """
+    logger.info('Merge method not implemented yet!')
     print('Error! This option still needs to be developed')
 
 elif process == 'clip':
@@ -79,24 +125,71 @@ elif process == 'clip':
     Clip a spatial dataset using another spatial boundary file
     """
     # file to clip
+    logger.info('Running a clip')
+
     input_file = getenv('input_file')
     if input_file is None:
         print('Error! No input_file var passed. Terminating!')
         exit(2)
+    logger.info('Input file: %s' %input_file)
 
+    # get extents for clip - file or defined extents
     # clip area file
     clip_file = getenv('clip_file')
-    if clip_file is None:
-        print('Error! No clip_file var passed. Terminating!')
+    logger.info('Clip file: %s' %clip_file)
+
+    # defined extents
+    extent = getenv('extent')
+    if extent is not None:
+        extent = extent.split(',')
+    logger.info('Extent: %s' %extent)
+
+    if clip_file is None and extent is None:
+        print('Error! No clip_file var or extent var passed. Terminating!')
         exit(2)
 
     # output file
     output_file = getenv('output_file')
+    logger.info('Output file: %s' %output_file)
     if output_file is None:
         print('Error! No output file var passed. Terminating!')
         exit(2)
 
     # run clip process
-    subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), join(data_path, output_dir, output_file), join(data_path, input_dir, input_file)])
+    if data_type == 'vector':
+        print('Running vector clip')
+        logger.info('Using vector methods')
+        print(join(data_path, output_dir, output_file))
+        if clip_file is not None:
+            logger.info('Using clip file method')
+            logger.info("Running....")
+            subprocess.run(["ogr2ogr", "-clipsrc", join(data_path, input_dir, clip_file), "-f", "GPKG", join(data_path, output_dir, 'data', output_file), join(data_path, input_dir, input_file)])
+            logger.info("....completed processing")
+
+        elif extent is not None:
+            print('Running extent method')
+            logger.info('Using extent method')
+            logger.info("Running....")
+            subprocess.run(["ogr2ogr", "-spat", *extent, "-f", "GPKG", join(data_path, output_dir, 'data', output_file), join(data_path, input_dir, input_file)])
+            logger.info("....completed processing")
+
+    elif data_type == 'raster':
+        logger.info('Using raster methods')
+        if extent is not None:
+            logger.info("Using extent method")
+
+            logger.info("Running....")
+            subprocess.run(["gdalwarp", "-te", *extent, join(data_path, input_dir, input_file), join(data_path, output_dir, 'data', output_file)])
+            logger.info("....completed processing")
+
+        elif clip_file is not None:
+            logger.info("Using clip file method")
+            logger.info("Raster clip method with a clip file not implemented yet")
+
+    # check output file is written...... and if not return an error
+    files = [f for f in listdir(join(data_path, output_dir, 'data')) if
+             isfile(join(data_path, output_dir, 'data', f))]
+    logger.info('Files in output dir: %s' % files)
 
     print('Completed running clip')
+    logger.info('Completed running clip. Stopping tool.')

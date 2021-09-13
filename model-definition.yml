@@ -1,15 +1,12 @@
 kind: Model
 apiVersion: v1alpha5
 metadata:
-  displayName: CityCAT (OpenCLIM)
-  type: Modelling
-  name: citycat-openclim
-  summary: CityCAT is a tool for modelling, analysis and visualisation of surface water flooding.
+  displayName: Spatial data transformer
+  type: data-processing
+  name: spatial-data-transformer
+  summary: A utility tool for transforming spatial data
   description: >
-    CityCAT (City Catchment Analysis Tool) is a unique software tool for modelling, analysis and visualisation of
-    surface water flooding. CityCAT enables rapid assessment of combined pluvial and fluvial flood risk and allows
-    assessment of the effects of different flood alleviation measures.
-    When used in return period mode, rainfall events are generated from observations using L-moments.
+    Enables spatial data transformations using gdal methods. Supports a range of methods for both vector and raster data types.
 spec:
   inputs:
     env:
@@ -25,6 +22,18 @@ spec:
           - name: re-project
             title: Re-project into another coordinate system
 
+      - name: data_type
+        title: Data type
+        type: string
+        description: The data format to be transformed
+        default: vector
+        required: false
+        options:
+          - name: vector
+            title: Vector data format
+          - name: raster
+            title: Raster data format
+
       - name: output_crs
         title: The CRS for the re-projected dataset
         description: Required whe using the re-project transform function. Should be a valid EPSG code e.g. 27700 (BNG), 4326 (GPS CRS)
@@ -33,8 +42,8 @@ spec:
         required: false
 
       - name: input_file
-        title: Input clip file
-        description: The name of the file passed to be clipped. Required only when running the clip transform.
+        title: Input file
+        description: The name of the file passed to be transformed. Required only when running the clip process.
         type: string
         default: ''
         required: false
@@ -53,14 +62,24 @@ spec:
         required: false
         default: ''
 
+      - name: extent
+        title: extent
+        type: string
+        description: Should be formatted as `<xmin>,<ymin>,<xmax>,<ymax>`
+        default: ''
+        required: false
+
     dataslots:
       - name: Input data files
         description: Any input data files for the processing transforms to be run.
         path: inputs/
-        required: true
+        required: false
 
   outputs:
     datasets:
-      - name: outputs/run/**/*
+      - name: outputs/data/*
         type: folder
         description: path to processed data outputs
+      - name: outputs/log/*
+        type: Text
+        description: log file

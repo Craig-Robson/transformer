@@ -86,7 +86,7 @@ if process == 're-project':
     logger.info('Running a re-project')
     # output crs
     crs_output = getenv('output_crs')
-    logger.info("Output CRS:". crs_output)
+    logger.info("Output CRS: %s" %crs_output)
     if crs_output is None: # use default is nothing is passed
         print('Warning! No crs_output var passed. Using default - 27700')
         crs_output = defaults['output_crs']
@@ -184,7 +184,7 @@ elif process == 'clip':
 
         elif clip_file is not None:
             logger.info("Using clip file method")
-            logger.info("Raster clip method with a clip file not developed yet")
+            logger.info("Raster clip method with a clip file not implemented yet")
 
     # check output file is written...... and if not return an error
     files = [f for f in listdir(join(data_path, output_dir, 'data')) if

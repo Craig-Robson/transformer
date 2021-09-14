@@ -8,6 +8,8 @@ Currently supported transforms (processes):
 * re-projection
 * clip
 
+## Outputs
+Outputs are written to two directories. Data is saved to /data/outputs, whereas a logfile is written to /data/log.
 
 ## Use
   
